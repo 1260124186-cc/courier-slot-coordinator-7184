@@ -114,9 +114,9 @@ func (s *DispatchService) GetShipment(ctx context.Context, shipmentID string) (d
 }
 
 func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, requestedUnits int) error {
-	limit, knownZone := s.zonePackageLimit[zone]
-	if !knownZone {
-		return fmt.Errorf("%w: %s", domain.ErrInvalidShipment, zone)
+	limit, err := s.zoneLimit(zone)
+	if err != nil {
+		return err
 	}
 	shipments, err := s.store.ListByZone(ctx, zone)
 	if err != nil {
@@ -133,4 +133,12 @@ func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, r
 		return domain.ErrZoneCapacity
 	}
 	return nil
+}
+
+func (s *DispatchService) zoneLimit(zone string) (int, error) {
+	limit, knownZone := s.zonePackageLimit[zone]
+	if !knownZone {
+		return 0, fmt.Errorf("%w: %s", domain.ErrUnknownZone, zone)
+	}
+	return limit, nil
 }

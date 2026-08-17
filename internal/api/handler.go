@@ -107,6 +107,8 @@ func writeServiceError(writer http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		writeError(writer, http.StatusNotFound, err)
+	case errors.Is(err, domain.ErrUnknownZone):
+		writeError(writer, http.StatusNotFound, err)
 	case errors.Is(err, domain.ErrConflict):
 		writeError(writer, http.StatusConflict, err)
 	case errors.Is(err, domain.ErrInvalidShipment),

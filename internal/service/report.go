@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/1260124186-cc/courier-slot-coordinator/internal/domain"
 )
@@ -16,6 +17,10 @@ type ZoneSummary struct {
 }
 
 func (s *DispatchService) ZoneSummary(ctx context.Context, zone string) (ZoneSummary, error) {
+	zone = strings.ToLower(strings.TrimSpace(zone))
+	if _, err := s.zoneLimit(zone); err != nil {
+		return ZoneSummary{}, err
+	}
 	shipments, err := s.store.ListByZone(ctx, zone)
 	if err != nil {
 		return ZoneSummary{}, err
