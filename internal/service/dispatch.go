@@ -125,9 +125,7 @@ func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, r
 
 	usedUnits := 0
 	for _, shipment := range shipments {
-		if shipment.Status != domain.StatusCancelled && shipment.Status != domain.StatusDelivered {
-			usedUnits += shipment.PackageUnits()
-		}
+		usedUnits += shipment.PackageUnits()
 	}
 	if usedUnits+requestedUnits > limit {
 		return domain.ErrZoneCapacity

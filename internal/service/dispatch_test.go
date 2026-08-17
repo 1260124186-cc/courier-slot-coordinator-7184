@@ -59,3 +59,31 @@ func TestCreateShipmentRejectsCapacityOverflow(t *testing.T) {
 		t.Fatalf("second CreateShipment() error = %v, want ErrZoneCapacity", err)
 	}
 }
+
+func TestDeliveredShipmentReleasesZoneCapacity(t *testing.T) {
+	dispatch := NewDispatchService(repository.NewMemoryStore())
+	input := CreateShipmentInput{
+		Recipient: "Ava",
+		Zone:      "west",
+		Window:    "09:00-11:00",
+		Packages:  []domain.Package{{SKU: "desk", Units: 10}},
+	}
+	shipment, err := dispatch.CreateShipment(context.Background(), input)
+	if err != nil {
+		t.Fatalf("CreateShipment() error = %v", err)
+	}
+	if _, err := dispatch.AssignCourier(context.Background(), shipment.ID, "courier-7"); err != nil {
+		t.Fatalf("AssignCourier() error = %v", err)
+	}
+	if _, err := dispatch.Collect(context.Background(), shipment.ID); err != nil {
+		t.Fatalf("Collect() error = %v", err)
+	}
+	if _, err := dispatch.Deliver(context.Background(), shipment.ID); err != nil {
+		t.Fatalf("Deliver() error = %v", err)
+	}
+
+	input.Recipient = "Noah"
+	if _, err := dispatch.CreateShipment(context.Background(), input); err != nil {
+		t.Fatalf("CreateShipment() after delivery error = %v, want capacity to be released", err)
+	}
+}
