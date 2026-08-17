@@ -41,6 +41,10 @@ func (s Shipment) PackageUnits() int {
 	return total
 }
 
+func (s Shipment) CountsAgainstCapacity() bool {
+	return s.Status != StatusCancelled && s.Status != StatusDelivered
+}
+
 func (s Shipment) Validate() error {
 	if strings.TrimSpace(s.ID) == "" ||
 		strings.TrimSpace(s.Recipient) == "" ||

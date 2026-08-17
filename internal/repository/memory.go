@@ -9,6 +9,7 @@ import (
 
 type Store interface {
 	Create(context.Context, domain.Shipment) error
+	CreateWithinZone(context.Context, domain.Shipment, int) error
 	Get(context.Context, string) (domain.Shipment, error)
 	Update(context.Context, domain.Shipment, int64) (domain.Shipment, error)
 	ListByZone(context.Context, string) ([]domain.Shipment, error)
@@ -35,6 +36,34 @@ func (s *MemoryStore) Create(ctx context.Context, shipment domain.Shipment) erro
 	defer s.mu.Unlock()
 	if _, exists := s.shipments[shipment.ID]; exists {
 		return domain.ErrAlreadyExists
+	}
+	s.shipments[shipment.ID] = domain.CloneShipment(shipment)
+	return nil
+}
+
+func (s *MemoryStore) CreateWithinZone(ctx context.Context, shipment domain.Shipment, limit int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if err := shipment.Validate(); err != nil {
+		return err
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, exists := s.shipments[shipment.ID]; exists {
+		return domain.ErrAlreadyExists
+	}
+
+	capacity := domain.NewZoneCapacity(limit)
+	for _, existing := range s.shipments {
+		if existing.Zone != shipment.Zone {
+			continue
+		}
+		capacity.Include(existing)
+	}
+	if !capacity.CanAccept(shipment) {
+		return domain.ErrZoneCapacity
 	}
 	s.shipments[shipment.ID] = domain.CloneShipment(shipment)
 	return nil

@@ -55,13 +55,17 @@ func (s *DispatchService) CreateShipment(ctx context.Context, input CreateShipme
 	if err := shipment.Validate(); err != nil {
 		return domain.Shipment{}, err
 	}
-	if err := s.ensureZoneCapacity(ctx, shipment.Zone, shipment.PackageUnits()); err != nil {
-		return domain.Shipment{}, err
+	limit, knownZone := s.zonePackageLimit[shipment.Zone]
+	if !knownZone {
+		return domain.Shipment{}, fmt.Errorf("%w: %s", domain.ErrInvalidShipment, shipment.Zone)
+	}
+	if !domain.NewZoneCapacity(limit).CanAccept(shipment) {
+		return domain.Shipment{}, domain.ErrZoneCapacity
 	}
 	if s.beforeStoreCreate != nil {
 		s.beforeStoreCreate()
 	}
-	if err := s.store.Create(ctx, shipment); err != nil {
+	if err := s.store.CreateWithinZone(ctx, shipment, limit); err != nil {
 		return domain.Shipment{}, err
 	}
 	return domain.CloneShipment(shipment), nil
@@ -115,26 +119,4 @@ func (s *DispatchService) transition(ctx context.Context, shipmentID string, nex
 
 func (s *DispatchService) GetShipment(ctx context.Context, shipmentID string) (domain.Shipment, error) {
 	return s.store.Get(ctx, shipmentID)
-}
-
-func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, requestedUnits int) error {
-	limit, knownZone := s.zonePackageLimit[zone]
-	if !knownZone {
-		return fmt.Errorf("%w: %s", domain.ErrInvalidShipment, zone)
-	}
-	shipments, err := s.store.ListByZone(ctx, zone)
-	if err != nil {
-		return err
-	}
-
-	usedUnits := 0
-	for _, shipment := range shipments {
-		if shipment.Status != domain.StatusCancelled && shipment.Status != domain.StatusDelivered {
-			usedUnits += shipment.PackageUnits()
-		}
-	}
-	if usedUnits+requestedUnits > limit {
-		return domain.ErrZoneCapacity
-	}
-	return nil
 }
