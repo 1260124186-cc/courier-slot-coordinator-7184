@@ -51,7 +51,7 @@ func (s *MemoryStore) Get(ctx context.Context, id string) (domain.Shipment, erro
 	if !exists {
 		return domain.Shipment{}, domain.ErrNotFound
 	}
-	return shipment, nil
+	return domain.CloneShipment(shipment), nil
 }
 
 func (s *MemoryStore) Update(ctx context.Context, shipment domain.Shipment, expectedVersion int64) (domain.Shipment, error) {
@@ -86,7 +86,7 @@ func (s *MemoryStore) ListByZone(ctx context.Context, zone string) ([]domain.Shi
 	shipments := make([]domain.Shipment, 0)
 	for _, shipment := range s.shipments {
 		if shipment.Zone == zone {
-			shipments = append(shipments, shipment)
+			shipments = append(shipments, domain.CloneShipment(shipment))
 		}
 	}
 	return shipments, nil
