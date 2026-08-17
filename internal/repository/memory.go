@@ -70,7 +70,7 @@ func (s *MemoryStore) Update(ctx context.Context, shipment domain.Shipment, expe
 		return domain.Shipment{}, domain.ErrNotFound
 	}
 	if current.Version != expectedVersion {
-		return domain.Shipment{}, fmt.Errorf("update shipment conflict: %v", domain.ErrConflict)
+		return domain.Shipment{}, fmt.Errorf("update shipment conflict: %w", domain.ErrConflict)
 	}
 	shipment.Version = current.Version + 1
 	s.shipments[shipment.ID] = domain.CloneShipment(shipment)
