@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,6 +25,8 @@ type DispatchService struct {
 	sequence          atomic.Uint64
 	zonePackageLimit  map[string]int
 	beforeStoreCreate func()
+	// createMu 把“容量校验 + 写入”串行化，避免并发创建时 check-then-act 竞态导致超出分区容量
+	createMu sync.Mutex
 }
 
 func NewDispatchService(store repository.Store) *DispatchService {
@@ -55,11 +58,18 @@ func (s *DispatchService) CreateShipment(ctx context.Context, input CreateShipme
 	if err := shipment.Validate(); err != nil {
 		return domain.Shipment{}, err
 	}
+	// 初次预筛：在无竞争时快速拒绝明显超限的请求，避免不必要的后续处理
 	if err := s.ensureZoneCapacity(ctx, shipment.Zone, shipment.PackageUnits()); err != nil {
 		return domain.Shipment{}, err
 	}
 	if s.beforeStoreCreate != nil {
 		s.beforeStoreCreate()
+	}
+	// 临界区：再次校验容量并写入，确保并发请求串行进入，第二个能看到第一个已占用的容量
+	s.createMu.Lock()
+	defer s.createMu.Unlock()
+	if err := s.ensureZoneCapacity(ctx, shipment.Zone, shipment.PackageUnits()); err != nil {
+		return domain.Shipment{}, err
 	}
 	if err := s.store.Create(ctx, shipment); err != nil {
 		return domain.Shipment{}, err
