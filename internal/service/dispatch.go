@@ -125,6 +125,10 @@ func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, r
 
 	usedUnits := 0
 	for _, shipment := range shipments {
+		// 已送达或已取消的终态单据不再占用分区容量
+		if shipment.Status == domain.StatusDelivered || shipment.Status == domain.StatusCancelled {
+			continue
+		}
 		usedUnits += shipment.PackageUnits()
 	}
 	if usedUnits+requestedUnits > limit {
