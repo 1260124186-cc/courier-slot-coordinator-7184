@@ -59,3 +59,10 @@ func TestCreateShipmentRejectsCapacityOverflow(t *testing.T) {
 		t.Fatalf("second CreateShipment() error = %v, want ErrZoneCapacity", err)
 	}
 }
+
+func TestZoneSummaryRejectsUnconfiguredZone(t *testing.T) {
+	dispatch := NewDispatchService(repository.NewMemoryStore())
+	if _, err := dispatch.ZoneSummary(context.Background(), "central"); !errors.Is(err, domain.ErrUnknownZone) {
+		t.Fatalf("ZoneSummary() error = %v, want ErrUnknownZone", err)
+	}
+}

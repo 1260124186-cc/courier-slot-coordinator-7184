@@ -1,4 +1,4 @@
-# courier-slot-coordinator-7184 Docker 交付说明
+# courier-slot-coordinator__004 Docker 交付说明
 
 ## 项目概览
 - Courier Slot Coordinator is a small Go HTTP service for local delivery teams. Dispatchers create a shipment for a delivery zone and time window, assign a courier, record collection
@@ -20,8 +20,8 @@ go run ./cmd/server
 ## Docker 构建
 
 ```bash
-./build_benzhi_docker.sh courier-slot-coordinator-7184-benzhi linux/amd64
-docker run --rm -it courier-slot-coordinator-7184-benzhi bash
+./build_benzhi_docker.sh courier-slot-coordinator__004-benzhi linux/amd64
+docker run --rm -it courier-slot-coordinator__004-benzhi bash
 ```
 
 ## 环境

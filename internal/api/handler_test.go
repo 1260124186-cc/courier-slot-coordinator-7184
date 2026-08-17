@@ -23,3 +23,14 @@ func TestCreateShipmentEndpoint(t *testing.T) {
 		t.Fatalf("status = %d, want %d; body=%s", response.Code, http.StatusCreated, response.Body.String())
 	}
 }
+
+func TestUnknownZoneSummaryEndpointIsRejected(t *testing.T) {
+	handler := NewHandler(service.NewDispatchService(repository.NewMemoryStore()))
+	request := httptest.NewRequest(http.MethodGet, "/zones/central/summary", nil)
+	response := httptest.NewRecorder()
+
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d; body=%s", response.Code, http.StatusNotFound, response.Body.String())
+	}
+}
