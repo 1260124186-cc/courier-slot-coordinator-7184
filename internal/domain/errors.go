@@ -12,3 +12,23 @@ var (
 	ErrZoneCapacity      = errors.New("zone package capacity exceeded")
 	ErrShipmentFinalized = errors.New("shipment is already finalized")
 )
+
+type OperationError struct {
+	Operation string
+	Cause     error
+}
+
+func (e *OperationError) Error() string {
+	return e.Operation + ": " + e.Cause.Error()
+}
+
+func (e *OperationError) Unwrap() error {
+	return e.Cause
+}
+
+func WrapOperation(operation string, cause error) error {
+	if cause == nil {
+		return nil
+	}
+	return &OperationError{Operation: operation, Cause: cause}
+}

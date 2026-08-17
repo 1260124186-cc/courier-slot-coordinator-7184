@@ -80,7 +80,7 @@ func (s *DispatchService) AssignCourier(ctx context.Context, shipmentID, courier
 	shipment.UpdatedAt = s.clock().UTC()
 	updated, err := s.store.Update(ctx, shipment, shipment.Version)
 	if err != nil {
-		return domain.Shipment{}, fmt.Errorf("assign courier: %v", err)
+		return domain.Shipment{}, domain.WrapOperation("assign courier", err)
 	}
 	return updated, nil
 }

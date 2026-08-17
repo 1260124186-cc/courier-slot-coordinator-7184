@@ -104,19 +104,23 @@ func decodeJSON(request *http.Request, target any) error {
 }
 
 func writeServiceError(writer http.ResponseWriter, err error) {
+	writeError(writer, serviceErrorStatus(err), err)
+}
+
+func serviceErrorStatus(err error) int {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
-		writeError(writer, http.StatusNotFound, err)
+		return http.StatusNotFound
 	case errors.Is(err, domain.ErrConflict):
-		writeError(writer, http.StatusConflict, err)
+		return http.StatusConflict
 	case errors.Is(err, domain.ErrInvalidShipment),
 		errors.Is(err, domain.ErrInvalidTransition),
 		errors.Is(err, domain.ErrCourierRequired),
 		errors.Is(err, domain.ErrShipmentFinalized),
 		errors.Is(err, domain.ErrZoneCapacity):
-		writeError(writer, http.StatusBadRequest, err)
+		return http.StatusBadRequest
 	default:
-		writeError(writer, http.StatusInternalServerError, err)
+		return http.StatusInternalServerError
 	}
 }
 
