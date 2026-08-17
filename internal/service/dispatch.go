@@ -78,7 +78,11 @@ func (s *DispatchService) AssignCourier(ctx context.Context, shipmentID, courier
 	}
 	shipment.CourierID = courierID
 	shipment.UpdatedAt = s.clock().UTC()
-	return s.store.Update(ctx, shipment, shipment.Version)
+	updated, err := s.store.Update(ctx, shipment, shipment.Version)
+	if err != nil {
+		return domain.Shipment{}, fmt.Errorf("assign courier: %v", err)
+	}
+	return updated, nil
 }
 
 func (s *DispatchService) Collect(ctx context.Context, shipmentID string) (domain.Shipment, error) {

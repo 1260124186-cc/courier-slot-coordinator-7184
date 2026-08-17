@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/1260124186-cc/courier-slot-coordinator/internal/domain"
@@ -30,7 +31,7 @@ func TestMemoryStoreUsesOptimisticVersioning(t *testing.T) {
 	if updated.Version != 2 {
 		t.Fatalf("Update() version = %d, want 2", updated.Version)
 	}
-	if _, err := store.Update(context.Background(), shipment, 1); err != domain.ErrConflict {
+	if _, err := store.Update(context.Background(), shipment, 1); !errors.Is(err, domain.ErrConflict) {
 		t.Fatalf("stale Update() error = %v, want ErrConflict", err)
 	}
 }
