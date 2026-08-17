@@ -70,6 +70,10 @@ func (s Shipment) CanTransition(next ShipmentStatus) bool {
 	}
 }
 
+func (s Shipment) IsFinalized() bool {
+	return s.Status == StatusDelivered || s.Status == StatusCancelled
+}
+
 func CloneShipment(source Shipment) Shipment {
 	clone := source
 	clone.Packages = append([]Package(nil), source.Packages...)

@@ -118,14 +118,9 @@ func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, r
 	if !knownZone {
 		return fmt.Errorf("%w: %s", domain.ErrInvalidShipment, zone)
 	}
-	shipments, err := s.store.ListByZone(ctx, zone)
+	usedUnits, err := s.store.ActivePackageUnitsByZone(ctx, zone)
 	if err != nil {
 		return err
-	}
-
-	usedUnits := 0
-	for _, shipment := range shipments {
-		usedUnits += shipment.PackageUnits()
 	}
 	if usedUnits+requestedUnits > limit {
 		return domain.ErrZoneCapacity

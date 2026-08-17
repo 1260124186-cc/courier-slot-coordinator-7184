@@ -12,6 +12,7 @@ type Store interface {
 	Get(context.Context, string) (domain.Shipment, error)
 	Update(context.Context, domain.Shipment, int64) (domain.Shipment, error)
 	ListByZone(context.Context, string) ([]domain.Shipment, error)
+	ActivePackageUnitsByZone(context.Context, string) (int, error)
 }
 
 type MemoryStore struct {
@@ -90,4 +91,20 @@ func (s *MemoryStore) ListByZone(ctx context.Context, zone string) ([]domain.Shi
 		}
 	}
 	return shipments, nil
+}
+
+func (s *MemoryStore) ActivePackageUnitsByZone(ctx context.Context, zone string) (int, error) {
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	usedUnits := 0
+	for _, shipment := range s.shipments {
+		if shipment.Zone == zone && shipment.CountsTowardZoneCapacity() {
+			usedUnits += shipment.PackageUnits()
+		}
+	}
+	return usedUnits, nil
 }
