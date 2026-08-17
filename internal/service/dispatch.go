@@ -19,10 +19,11 @@ type CreateShipmentInput struct {
 }
 
 type DispatchService struct {
-	store            repository.Store
-	clock            func() time.Time
-	sequence         atomic.Uint64
-	zonePackageLimit map[string]int
+	store             repository.Store
+	clock             func() time.Time
+	sequence          atomic.Uint64
+	zonePackageLimit  map[string]int
+	beforeStoreCreate func()
 }
 
 func NewDispatchService(store repository.Store) *DispatchService {
@@ -56,6 +57,9 @@ func (s *DispatchService) CreateShipment(ctx context.Context, input CreateShipme
 	}
 	if err := s.ensureZoneCapacity(ctx, shipment.Zone, shipment.PackageUnits()); err != nil {
 		return domain.Shipment{}, err
+	}
+	if s.beforeStoreCreate != nil {
+		s.beforeStoreCreate()
 	}
 	if err := s.store.Create(ctx, shipment); err != nil {
 		return domain.Shipment{}, err
