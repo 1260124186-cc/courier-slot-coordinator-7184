@@ -20,8 +20,8 @@ go run ./cmd/server
 ## Docker 构建
 
 ```bash
-./build_benzhi_docker.sh courier-slot-coordinator__003-benzhi linux/amd64
-docker run --rm -it courier-slot-coordinator__003-benzhi bash
+./build_benzhi_docker.sh courier-slot-coordinator__003-benzhi linux/arm64
+docker run --rm --platform linux/arm64 courier-slot-coordinator__003-benzhi bash
 ```
 
 ## 环境
