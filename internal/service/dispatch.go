@@ -43,7 +43,7 @@ func (s *DispatchService) CreateShipment(ctx context.Context, input CreateShipme
 	shipment := domain.Shipment{
 		ID:        fmt.Sprintf("shipment-%06d", s.sequence.Add(1)),
 		Recipient: strings.TrimSpace(input.Recipient),
-		Zone:      strings.ToLower(strings.TrimSpace(input.Zone)),
+		Zone:      normalizeZone(input.Zone),
 		Window:    strings.TrimSpace(input.Window),
 		Packages:  append([]domain.Package(nil), input.Packages...),
 		Status:    domain.StatusReady,
@@ -133,12 +133,4 @@ func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, r
 		return domain.ErrZoneCapacity
 	}
 	return nil
-}
-
-func (s *DispatchService) zoneLimit(zone string) (int, error) {
-	limit, knownZone := s.zonePackageLimit[zone]
-	if !knownZone {
-		return 0, fmt.Errorf("%w: %s", domain.ErrUnknownZone, zone)
-	}
-	return limit, nil
 }

@@ -2,11 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 
-	"github.com/1260124186-cc/courier-slot-coordinator/internal/domain"
 	"github.com/1260124186-cc/courier-slot-coordinator/internal/service"
 )
 
@@ -101,33 +99,4 @@ func decodeJSON(request *http.Request, target any) error {
 	decoder := json.NewDecoder(request.Body)
 	decoder.DisallowUnknownFields()
 	return decoder.Decode(target)
-}
-
-func writeServiceError(writer http.ResponseWriter, err error) {
-	switch {
-	case errors.Is(err, domain.ErrNotFound):
-		writeError(writer, http.StatusNotFound, err)
-	case errors.Is(err, domain.ErrUnknownZone):
-		writeError(writer, http.StatusNotFound, err)
-	case errors.Is(err, domain.ErrConflict):
-		writeError(writer, http.StatusConflict, err)
-	case errors.Is(err, domain.ErrInvalidShipment),
-		errors.Is(err, domain.ErrInvalidTransition),
-		errors.Is(err, domain.ErrCourierRequired),
-		errors.Is(err, domain.ErrShipmentFinalized),
-		errors.Is(err, domain.ErrZoneCapacity):
-		writeError(writer, http.StatusBadRequest, err)
-	default:
-		writeError(writer, http.StatusInternalServerError, err)
-	}
-}
-
-func writeError(writer http.ResponseWriter, status int, err error) {
-	writeJSON(writer, status, map[string]string{"error": err.Error()})
-}
-
-func writeJSON(writer http.ResponseWriter, status int, value any) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(status)
-	_ = json.NewEncoder(writer).Encode(value)
 }
