@@ -45,7 +45,7 @@ func (s *DispatchService) CreateShipment(ctx context.Context, input CreateShipme
 		Recipient: strings.TrimSpace(input.Recipient),
 		Zone:      strings.ToLower(strings.TrimSpace(input.Zone)),
 		Window:    strings.TrimSpace(input.Window),
-		Packages:  append([]domain.Package(nil), input.Packages...),
+		Packages:  domain.ClonePackages(input.Packages),
 		Status:    domain.StatusReady,
 		Version:   1,
 		CreatedAt: now,
@@ -110,7 +110,11 @@ func (s *DispatchService) transition(ctx context.Context, shipmentID string, nex
 }
 
 func (s *DispatchService) GetShipment(ctx context.Context, shipmentID string) (domain.Shipment, error) {
-	return s.store.Get(ctx, shipmentID)
+	shipment, err := s.store.Get(ctx, shipmentID)
+	if err != nil {
+		return domain.Shipment{}, err
+	}
+	return domain.CloneShipment(shipment), nil
 }
 
 func (s *DispatchService) ensureZoneCapacity(ctx context.Context, zone string, requestedUnits int) error {

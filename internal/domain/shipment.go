@@ -69,9 +69,3 @@ func (s Shipment) CanTransition(next ShipmentStatus) bool {
 		return false
 	}
 }
-
-func CloneShipment(source Shipment) Shipment {
-	clone := source
-	clone.Packages = append([]Package(nil), source.Packages...)
-	return clone
-}
